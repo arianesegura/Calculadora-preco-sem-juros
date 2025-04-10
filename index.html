@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Preço com Parcelamento</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: #f9f9f9;
+    }
+    label, input, select {
+      display: block;
+      margin-bottom: 10px;
+    }
+    input, select {
+      padding: 6px;
+      width: 100%;
+    }
+    .resultado {
+      margin-top: 20px;
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    button {
+      padding: 10px;
+      width: 100%;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h2>Calculadora de Preço Final com Parcelamento</h2>
+
+  <label for="peca">Custo da Peça (R$)</label>
+  <input type="number" id="peca" value="320.98" step="0.01">
+
+  <label for="mao">Mão de Obra (R$)</label>
+  <input type="number" id="mao" value="120.00" step="0.01">
+
+  <label for="margem">Margem de Lucro (%)</label>
+  <input type="number" id="margem" value="15" step="0.1">
+
+  <label for="parcelas">Número de Parcelas</label>
+  <select id="parcelas">
+    <option value="0">Débito (1,69%)</option>
+    <option value="1">1x (à vista - 3,49%)</option>
+    <option value="2">2x (8,99%)</option>
+    <option value="3">3x (10,99%)</option>
+    <option value="4">4x (11,99%)</option>
+    <option value="5">5x (12,99%)</option>
+  </select>
+
+  <button onclick="calcular()">Calcular Preço Final</button>
+
+  <div class="resultado" id="resultado"></div>
+
+  <script>
+    function calcular() {
+      const peca = parseFloat(document.getElementById('peca').value);
+      const mao = parseFloat(document.getElementById('mao').value);
+      const margem = parseFloat(document.getElementById('margem').value) / 100;
+      const parcelas = parseInt(document.getElementById('parcelas').value);
+
+      const taxas = {
+        0: 0.0169,
+        1: 0.0349,
+        2: 0.0899,
+        3: 0.1099,
+        4: 0.1199,
+        5: 0.1299
+      };
+
+      const taxa = taxas[parcelas];
+      const custoTotal = peca + mao;
+      const valorComLucro = custoTotal * (1 + margem);
+      const precoFinal = valorComLucro / (1 - taxa);
+      const parcelaValor = parcelas > 0 ? precoFinal / parcelas : precoFinal;
+      const valorLiquido = precoFinal * (1 - taxa);
+      const lucroReal = valorLiquido - custoTotal;
+
+      document.getElementById('resultado').innerHTML = `
+        <strong>Resultado:</strong><br>
+        Preço Final: R$ ${precoFinal.toFixed(2)}<br>
+        ${parcelas > 0 ? `Parcelado em ${parcelas}x de R$ ${parcelaValor.toFixed(2)} (sem juros para o cliente)<br>` : `Pagamento no Débito<br>`}
+        Valor Líquido Recebido: R$ ${valorLiquido.toFixed(2)}<br>
+        Lucro Real: R$ ${lucroReal.toFixed(2)}
+      `;
+    }
+  </script>
+</body>
+</html>
