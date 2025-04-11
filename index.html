@@ -29,6 +29,11 @@
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
+    .alerta {
+      color: red;
+      font-weight: bold;
+      margin-top: 10px;
+    }
     button {
       padding: 10px;
       width: 100%;
@@ -41,14 +46,20 @@
     button:hover {
       background-color: #0056b3;
     }
-
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo img {
+      max-width: 150px;
+    }
   </style>
 </head>
 <body>
-  <h2>Calculadora de Preço Final</h2>
-
-  <label for="nomePeca">Nome da Peça</label>
-<input type="text" id="nomePeca" placeholder="Ex: Tela Samsung A12">
+  <div class="logo">
+    <img src="https://imgur.com/a/wi69eOy" alt="Sua Logo">
+  </div>
+  <h2>Calculadora de Preço Final com Parcelamento</h2>
 
   <label for="nomePeca">Nome da Peça</label>
 <input type="text" id="nomePeca" placeholder="Ex: Tela Samsung A12">
@@ -64,20 +75,33 @@
 
   <label for="parcelas">Número de Parcelas</label>
   <select id="parcelas">
-    <option value="0">Débito (1,69%)</option>
-    <option value="1">1x (à vista - 3,49%)</option>
-    <option value="2">2x (8,99%)</option>
-    <option value="3">3x (10,99%)</option>
-    <option value="4">4x (11,99%)</option>
-    <option value="5">5x (12,99%)</option>
+    <option value="0">Pix</option>
+    <option value="1">Débito (1,69%)</option>
+    <option value="2">1x (à vista 3,49%)</option>
+    <option value="3">2x (8,99%)</option>
+    <option value="4">3x (10,99%)</option>
+    <option value="5">4x (11,99%)</option>
+    <option value="6">5x (12,99%)</option>
   </select>
 
-  <button onclick="calcular()">Calcular Preço Final</button>
-  <button onclick="imprimirResultado()">Imprimir Resultado</button>
+  <label for="desconto">Aplicar 10% ?</label>
+  <select id="desconto">
+    <option value="nao">Não</option>
+    <option value="sim">Sim</option>
+  </select>
+
+  <label for="observacao">Observação</label>
+  <input type="text" id="observacao" placeholder="Ex: Cliente pediu urgência ou usou cupom de fidelidade">
+
+  <button onclick="calcular()">Calcular</button>
+  
+  <button onclick="imprimirResultado()" style="margin-top: 15px;">Imprimir Resultado</button>
+
 
   <div class="resultado" id="resultado"></div>
 
   <script>
+
     function imprimirResultado() {
   const resultado = document.getElementById('resultado').innerHTML;
   const janela = window.open('', '', 'width=800,height=600');
@@ -88,40 +112,73 @@
   janela.document.close();
   janela.print();
 }
-    
+
     function calcular() {
       const peca = parseFloat(document.getElementById('peca').value);
       const mao = parseFloat(document.getElementById('mao').value);
       const margem = parseFloat(document.getElementById('margem').value) / 100;
       const parcelas = parseInt(document.getElementById('parcelas').value);
+      const aplicarDesconto = document.getElementById('desconto').value === 'sim';
+      const observacao = document.getElementById('observacao').value;
 
       const taxas = {
-        0: 0.0169,
-        1: 0.0349,
-        2: 0.0899,
-        3: 0.1099,
-        4: 0.1199,
-        5: 0.1299
+        0: 0.0000,
+        1: 0.0169,
+        2: 0.0349,
+        3: 0.0899,
+        4: 0.1099,
+        5: 0.1199,
+        6: 0.1299
       };
 
       const taxa = taxas[parcelas];
       const custoTotal = peca + mao;
-      const valorComLucro = custoTotal * (1 + margem);
-      const precoFinal = valorComLucro / (1 - taxa);
-      const parcelaValor = parcelas > 0 ? precoFinal / parcelas : precoFinal;
-      const valorLiquido = precoFinal * (1 - taxa);
+      let valorComLucro = custoTotal * (1 + margem);
+
+      let precoFinal, valorLiquido, parcelaValor, textoParcelamento;
+
+      if ((parcelas === 0 || parcelas === 1) && aplicarDesconto) {
+        valorComLucro *= 0.9;
+        precoFinal = valorComLucro / (1 - taxa);
+        valorLiquido = precoFinal * (1 - taxa);
+        parcelaValor = precoFinal;
+        textoParcelamento = parcelas === 0
+          ? `Pagamento via PIX com 10% de desconto<br>`
+          : `Pagamento no Débito com 10% de desconto<br>`;
+      } else {
+        precoFinal = valorComLucro / (1 - taxa);
+        valorLiquido = precoFinal * (1 - taxa);
+        parcelaValor = parcelas > 0 ? precoFinal / parcelas : precoFinal;
+        textoParcelamento = parcelas > 1
+          ? `Parcelado em ${parcelas}x de R$ ${parcelaValor.toFixed(2)} (sem juros para o cliente)<br>`
+          : parcelas === 1
+            ? `Pagamento no Débito<br>`
+            : `Pagamento via PIX<br>`;
+      }
+
       const lucroReal = valorLiquido - custoTotal;
+      const lucroPercentual = (lucroReal / custoTotal) * 100;
+
+      let alerta;
+      if (lucroPercentual < 10) {
+        alerta = `<div class='alerta'>⚠️ Atenção: Lucro abaixo de 10%!</div>`;
+      } else if (lucroPercentual > 20) {
+        alerta = `<div class='alerta' style='color:green;'>✅ Excelente! Lucro acima de 20%</div>`;
+      } else {
+        alerta = '';
+      }
 
       document.getElementById('resultado').innerHTML = `
         <strong>Resultado:</strong><br>
         Preço Final: R$ ${precoFinal.toFixed(2)}<br>
-        ${parcelas > 0 ? `Parcelado em ${parcelas}x de R$ ${parcelaValor.toFixed(2)} (sem juros para o cliente)<br>` : `Pagamento no Débito<br>`}
+        ${textoParcelamento}
         Valor Líquido Recebido: R$ ${valorLiquido.toFixed(2)}<br>
-        Lucro Real: R$ ${lucroReal.toFixed(2)}
+        Lucro Real: R$ ${lucroReal.toFixed(2)}<br>
+        Lucro Percentual: ${lucroPercentual.toFixed(2)}%<br>
+        ${observacao ? `<br><strong>Observação:</strong> ${observacao}` : ''}<br>
+        ${alerta}
       `;
-      
     }
-    
   </script>
 </body>
 </html>
