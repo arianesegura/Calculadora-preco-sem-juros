@@ -57,13 +57,12 @@
 </head>
 <body>
   <div class="logo">
-     <h2> COUTEC FIX </h2>
-
+    <h2>COUTEC FIX</h2>
   </div>
-  <h2>Calculadora de Preço </h2>
+  <h2>Calculadora de Preço</h2>
 
   <label for="nomePeca">Nome da Peça</label>
-<input type="text" id="nomePeca" placeholder="Ex: Tela do Samsung A20">
+  <input type="text" id="nomePeca" placeholder="Ex: Tela do Samsung A20">
 
   <label for="peca">Custo da Peça (R$)</label>
   <input type="number" id="peca" value="320.98" step="0.01">
@@ -75,120 +74,112 @@
   <input type="number" id="margem" value="15" step="0.1">
 
   <label for="parcelas">Forma de Pagamento</label>
-<select id="parcelas">
-  <option value="pix">Pix (0%)</option>
-  <option value="0">Débito (1,69%)</option>
-  <option value="1">1x (à vista 3,49%)</option>
-  <option value="2">2x (8,99%)</option>
-  <option value="3">3x (10,99%)</option>
-  <option value="4">4x (11,99%)</option>
-  <option value="5">5x (12,99%)</option>
-</select>
+  <select id="parcelas">
+    <option value="pix">Pix (0%)</option>
+    <option value="0">Débito (1,69%)</option>
+    <option value="1">1x (à vista 3,49%)</option>
+    <option value="2">2x (8,99%)</option>
+    <option value="3">3x (10,99%)</option>
+    <option value="4">4x (11,99%)</option>
+    <option value="5">5x (12,99%)</option>
+  </select>
 
-
-  <label for="desconto">Aplicar 10% ?</label>
+  <label for="desconto">Aplicar Desconto?</label>
   <select id="desconto">
-    <option value="nao">Não</option>
-    <option value="sim">Sim</option>
+    <option value="0">Não</option>
+    <option value="5">5%</option>
+    <option value="10">10%</option>
   </select>
 
   <label for="observacao">Observação</label>
   <input type="text" id="observacao" placeholder="Ex: Cliente pediu urgência ou usou cupom de fidelidade">
 
   <button onclick="calcular()">Calcular</button>
-  
   <button onclick="imprimirResultado()" style="margin-top: 15px;">Imprimir Resultado</button>
-
 
   <div class="resultado" id="resultado"></div>
 
   <script>
+  function calcular() {
+    const nomePeca = document.getElementById('nomePeca').value;
+    const peca = parseFloat(document.getElementById('peca').value);
+    const mao = parseFloat(document.getElementById('mao').value);
+    const margem = parseFloat(document.getElementById('margem').value) / 100;
+    const parcelasValue = document.getElementById('parcelas').value;
+    const parcelas = parcelasValue === "pix" ? 0 : parseInt(parcelasValue);
+    const descontoSelecionado = Number(document.getElementById('desconto').value);
+    const observacao = document.getElementById('observacao').value;
 
-    function imprimirResultado() {
+    const taxas = {
+      pix: 0.0000,
+      0: 0.0169,  // Débito
+      1: 0.0349,
+      2: 0.0899,
+      3: 0.1099,
+      4: 0.1199,
+      5: 0.1299
+    };
 
-  const nomePeca = document.getElementById('nomePeca').value;
-  const resultado = document.getElementById('resultado').innerHTML;
-  const janela = window.open('', '', 'width=800,height=600');
-  janela.document.write('<html><head><title>Impressão</title></head><body>');
-  janela.document.write('<h2>Resultado da Simulação</h2>');
-  janela.document.write(resultado);
-  janela.document.write('</body></html>');
-  janela.document.close();
-  janela.print();
-}
+    const taxa = taxas[parcelasValue];
+    const custoTotal = peca + mao;
+    const valorComLucro = custoTotal * (1 + margem);
+    let valorDescontado = valorComLucro;
 
-    function calcular() {
-      const nomePeca = document.getElementById('nomePeca').value;
-      const peca = parseFloat(document.getElementById('peca').value);
-      const mao = parseFloat(document.getElementById('mao').value);
-      const margem = parseFloat(document.getElementById('margem').value) / 100;
-      const parcelasValue = document.getElementById('parcelas').value;
-const isPix = parcelasValue === "pix";
-const parcelas = isPix ? 0 : parseInt(parcelasValue);
-      const aplicarDesconto = document.getElementById('desconto').value === 'sim';
-      const observacao = document.getElementById('observacao').value;
+    let precoFinal, valorLiquido, parcelaValor, textoParcelamento;
 
-      const taxas = {
-  pix: 0.0000,
-  0: 0.0169,
-  1: 0.0349,
-  2: 0.0899,
-  3: 0.1099,
-  4: 0.1199,
-  5: 0.1299
-};
+    const isPix = parcelasValue === "pix";
+    const isDebito = parcelasValue === "0";
 
+    if ((isPix || isDebito) && descontoSelecionado > 0) {
+      const descontoDecimal = descontoSelecionado / 100;
+      valorDescontado = valorComLucro * (1 - descontoDecimal);
+      precoFinal = valorDescontado / (1 - taxa);
+      valorLiquido = precoFinal * (1 - taxa);
+      parcelaValor = precoFinal;
 
-      const taxa = taxas[parcelasValue];
-      const custoTotal = peca + mao;
-      let valorComLucro = custoTotal * (1 + margem);
+      textoParcelamento = isPix
+        ? `Pagamento via PIX com ${descontoSelecionado}% de desconto<br>`
+        : `Pagamento no Débito com ${descontoSelecionado}% de desconto<br>`;
+    } else {
+      precoFinal = valorComLucro / (1 - taxa);
+      valorLiquido = precoFinal * (1 - taxa);
+      parcelaValor = parcelas > 0 ? precoFinal / parcelas : precoFinal;
 
-      let precoFinal, valorLiquido, parcelaValor, textoParcelamento;
-
-      if ((parcelas === 0 || parcelas === 1) && aplicarDesconto) {
-        valorComLucro *= 0.9;
-        precoFinal = valorComLucro / (1 - taxa);
-        valorLiquido = precoFinal * (1 - taxa);
-        parcelaValor = precoFinal;
-        textoParcelamento = parcelas === 0
-          ? `Pagamento via PIX com 10% de desconto<br>`
-          : `Pagamento no Débito com 10% de desconto<br>`;
+      if (isPix) {
+        textoParcelamento = `Pagamento via PIX<br>`;
+      } else if (isDebito) {
+        textoParcelamento = `Pagamento no Débito<br>`;
+      } else if (parcelas === 1) {
+        textoParcelamento = `Pagamento à vista no crédito<br>`;
       } else {
-        precoFinal = valorComLucro / (1 - taxa);
-        valorLiquido = precoFinal * (1 - taxa);
-        parcelaValor = parcelas > 0 ? precoFinal / parcelas : precoFinal;
-        textoParcelamento = parcelas > 1
-  ? `Parcelado em ${parcelas}x de R$ ${parcelaValor.toFixed(2)} (sem juros para o cliente)<br>`
-  : parcelas === 1
-    ? `Pagamento no Débito<br>`
-    : `Pagamento via PIX<br>`;
-
+        textoParcelamento = `Parcelado em ${parcelas}x de R$ ${parcelaValor.toFixed(2)} (sem juros para o cliente)<br>`;
       }
-
-      const lucroReal = valorLiquido - custoTotal;
-      const lucroPercentual = (lucroReal / custoTotal) * 100;
-
-      let alerta;
-      if (lucroPercentual < 10) {
-        alerta = `<div class='alerta'>⚠️ Atenção: Lucro abaixo de 10%!</div>`;
-      } else if (lucroPercentual > 20) {
-        alerta = `<div class='alerta' style='color:green;'>✅ Excelente! Lucro acima de 20%</div>`;
-      } else {
-        alerta = '';
-      }
-
-      document.getElementById('resultado').innerHTML = `
-        <strong>Resultado:</strong><br>
-        <strong>Peça:</strong> ${nomePeca}<br>
-        Preço Final: R$ ${precoFinal.toFixed(2)}<br>
-        ${textoParcelamento}
-        Valor Líquido Recebido: R$ ${valorLiquido.toFixed(2)}<br>
-        Lucro Real: R$ ${lucroReal.toFixed(2)}<br>
-        Lucro Percentual: ${lucroPercentual.toFixed(2)}%<br>
-        ${observacao ? `<br><strong>Observação:</strong> ${observacao}` : ''}<br>
-        ${alerta}
-      `;
     }
-  </script>
+
+    const lucroReal = valorLiquido - custoTotal;
+    const lucroPercentual = (lucroReal / custoTotal) * 100;
+
+    let alerta;
+    if (lucroPercentual < 10) {
+      alerta = `<div class='alerta'>⚠️ Atenção: Lucro abaixo de 10%!</div>`;
+    } else if (lucroPercentual > 20) {
+      alerta = `<div class='alerta' style='color:green;'>✅ Excelente! Lucro acima de 20%</div>`;
+    } else {
+      alerta = '';
+    }
+
+    document.getElementById('resultado').innerHTML = `
+      <strong>Resultado:</strong><br>
+      <strong>Peça:</strong> ${nomePeca}<br>
+      Preço Final: R$ ${precoFinal.toFixed(2)}<br>
+      ${textoParcelamento}
+      Valor Líquido Recebido: R$ ${valorLiquido.toFixed(2)}<br>
+      Lucro Real: R$ ${lucroReal.toFixed(2)}<br>
+      Lucro Percentual: ${lucroPercentual.toFixed(2)}%<br>
+      ${observacao ? `<br><strong>Observação:</strong> ${observacao}` : ''}<br>
+      ${alerta}
+    `;
+  }
+</script>
 </body>
 </html>
