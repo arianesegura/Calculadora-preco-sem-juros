@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Calculadora de Preço</title>
   <style>
     body {
@@ -13,6 +13,13 @@
       border: 1px solid #ccc;
       border-radius: 10px;
       background-color: #f9f9f9;
+      color: #000;
+      transition: all 0.3s ease-in-out;
+    }
+    body.dark-mode {
+      background-color: #1e1e1e;
+      color: #fff;
+      border-color: #444;
     }
     label, input, select {
       display: block;
@@ -21,6 +28,15 @@
     input, select {
       padding: 6px;
       width: 100%;
+      background-color: #fff;
+      color: #000;
+      border: 1px solid #ccc;
+    }
+    body.dark-mode input,
+    body.dark-mode select {
+      background-color: #333;
+      color: #fff;
+      border-color: #555;
     }
     .resultado {
       margin-top: 20px;
@@ -28,6 +44,10 @@
       padding: 15px;
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    body.dark-mode .resultado {
+      background-color: #2a2a2a;
+      box-shadow: 0 0 10px rgba(255,255,255,0.05);
     }
     .alerta {
       color: red;
@@ -42,6 +62,7 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      margin-bottom: 10px;
     }
     button:hover {
       background-color: #0056b3;
@@ -59,6 +80,7 @@
   <div class="logo">
     <h2>COUTEC FIX</h2>
   </div>
+  <button onclick="alternarModo()">🌙 Alternar Dark Mode</button>
   <h2>Calculadora de Preço</h2>
 
   <label for="nomePeca">Nome da Peça</label>
@@ -95,91 +117,97 @@
   <input type="text" id="observacao" placeholder="Ex: Cliente pediu urgência ou usou cupom de fidelidade">
 
   <button onclick="calcular()">Calcular</button>
-  <button onclick="imprimirResultado()" style="margin-top: 15px;">Imprimir Resultado</button>
+  <button onclick="imprimirResultado()">Imprimir Resultado</button>
 
   <div class="resultado" id="resultado"></div>
 
   <script>
-  function calcular() {
-    const nomePeca = document.getElementById('nomePeca').value;
-    const peca = parseFloat(document.getElementById('peca').value);
-    const mao = parseFloat(document.getElementById('mao').value);
-    const margem = parseFloat(document.getElementById('margem').value) / 100;
-    const parcelasValue = document.getElementById('parcelas').value;
-    const parcelas = parcelasValue === "pix" ? 0 : parseInt(parcelasValue);
-    const descontoSelecionado = Number(document.getElementById('desconto').value);
-    const observacao = document.getElementById('observacao').value;
+    function alternarModo() {
+      document.body.classList.toggle('dark-mode');
+    }
 
-    const taxas = {
-      pix: 0.0000,
-      0: 0.0169,  // Débito
-      1: 0.0349,
-      2: 0.0899,
-      3: 0.1099,
-      4: 0.1199,
-      5: 0.1299
-    };
+    function calcular() {
+      const nomePeca = document.getElementById('nomePeca').value;
+      const peca = parseFloat(document.getElementById('peca').value);
+      const mao = parseFloat(document.getElementById('mao').value);
+      const margem = parseFloat(document.getElementById('margem').value) / 100;
+      const parcelasValue = document.getElementById('parcelas').value;
+      const parcelas = parcelasValue === "pix" ? 0 : parseInt(parcelasValue);
+      const descontoSelecionado = Number(document.getElementById('desconto').value);
+      const observacao = document.getElementById('observacao').value;
 
-    const taxa = taxas[parcelasValue];
-    const custoTotal = peca + mao;
-    const valorComLucro = custoTotal * (1 + margem);
-    let valorDescontado = valorComLucro;
+      const taxas = {
+        pix: 0.0000,
+        0: 0.0169,
+        1: 0.0349,
+        2: 0.0899,
+        3: 0.1099,
+        4: 0.1199,
+        5: 0.1299
+      };
 
-    let precoFinal, valorLiquido, parcelaValor, textoParcelamento;
+      const taxa = taxas[parcelasValue];
+      const custoTotal = peca + mao;
+      const valorComLucro = custoTotal * (1 + margem);
+      let valorDescontado = valorComLucro;
 
-    const isPix = parcelasValue === "pix";
-    const isDebito = parcelasValue === "0";
+      let precoFinal, valorLiquido, parcelaValor, textoParcelamento;
 
-    if ((isPix || isDebito) && descontoSelecionado > 0) {
-      const descontoDecimal = descontoSelecionado / 100;
-      valorDescontado = valorComLucro * (1 - descontoDecimal);
-      precoFinal = valorDescontado / (1 - taxa);
-      valorLiquido = precoFinal * (1 - taxa);
-      parcelaValor = precoFinal;
+      const isPix = parcelasValue === "pix";
+      const isDebito = parcelasValue === "0";
 
-      textoParcelamento = isPix
-        ? `Pagamento via PIX com ${descontoSelecionado}% de desconto<br>`
-        : `Pagamento no Débito com ${descontoSelecionado}% de desconto<br>`;
-    } else {
-      precoFinal = valorComLucro / (1 - taxa);
-      valorLiquido = precoFinal * (1 - taxa);
-      parcelaValor = parcelas > 0 ? precoFinal / parcelas : precoFinal;
+      if ((isPix || isDebito) && descontoSelecionado > 0) {
+        const descontoDecimal = descontoSelecionado / 100;
+        valorDescontado = valorComLucro * (1 - descontoDecimal);
+        precoFinal = valorDescontado / (1 - taxa);
+        valorLiquido = precoFinal * (1 - taxa);
+        parcelaValor = precoFinal;
 
-      if (isPix) {
-        textoParcelamento = `Pagamento via PIX<br>`;
-      } else if (isDebito) {
-        textoParcelamento = `Pagamento no Débito<br>`;
-      } else if (parcelas === 1) {
-        textoParcelamento = `Pagamento à vista no crédito<br>`;
+        textoParcelamento = isPix
+          ? `Pagamento via PIX com ${descontoSelecionado}% de desconto<br>`
+          : `Pagamento no Débito com ${descontoSelecionado}% de desconto<br>`;
       } else {
-        textoParcelamento = `Parcelado em ${parcelas}x de R$ ${parcelaValor.toFixed(2)} (sem juros para o cliente)<br>`;
+        precoFinal = valorComLucro / (1 - taxa);
+        valorLiquido = precoFinal * (1 - taxa);
+        parcelaValor = parcelas > 0 ? precoFinal / parcelas : precoFinal;
+
+        if (isPix) {
+          textoParcelamento = `Pagamento via PIX<br>`;
+        } else if (isDebito) {
+          textoParcelamento = `Pagamento no Débito<br>`;
+        } else if (parcelas === 1) {
+          textoParcelamento = `Pagamento à vista no crédito<br>`;
+        } else {
+          textoParcelamento = `Parcelado em ${parcelas}x de R$ ${parcelaValor.toFixed(2)} (sem juros para o cliente)<br>`;
+        }
       }
+
+      const lucroReal = valorLiquido - custoTotal;
+      const lucroPercentual = (lucroReal / custoTotal) * 100;
+
+      let alerta = '';
+      if (lucroPercentual < 10) {
+        alerta = `<div class='alerta'>⚠️ Atenção: Lucro abaixo de 10%!</div>`;
+      } else if (lucroPercentual > 20) {
+        alerta = `<div class='alerta' style='color:limegreen;'>✅ Excelente! Lucro acima de 20%</div>`;
+      }
+
+      document.getElementById('resultado').innerHTML = `
+        <strong>Resultado:</strong><br>
+        <strong>Peça:</strong> ${nomePeca}<br>
+        Preço Final: R$ ${precoFinal.toFixed(2)}<br>
+        ${textoParcelamento}
+        Valor Líquido Recebido: R$ ${valorLiquido.toFixed(2)}<br>
+        Lucro Real: R$ ${lucroReal.toFixed(2)}<br>
+        Lucro Percentual: ${lucroPercentual.toFixed(2)}%<br>
+        ${observacao ? `<br><strong>Observação:</strong> ${observacao}` : ''}<br>
+        ${alerta}
+      `;
     }
 
-    const lucroReal = valorLiquido - custoTotal;
-    const lucroPercentual = (lucroReal / custoTotal) * 100;
-
-    let alerta;
-    if (lucroPercentual < 10) {
-      alerta = `<div class='alerta'>⚠️ Atenção: Lucro abaixo de 10%!</div>`;
-    } else if (lucroPercentual > 20) {
-      alerta = `<div class='alerta' style='color:green;'>✅ Excelente! Lucro acima de 20%</div>`;
-    } else {
-      alerta = '';
+    function imprimirResultado() {
+      window.print();
     }
-
-    document.getElementById('resultado').innerHTML = `
-      <strong>Resultado:</strong><br>
-      <strong>Peça:</strong> ${nomePeca}<br>
-      Preço Final: R$ ${precoFinal.toFixed(2)}<br>
-      ${textoParcelamento}
-      Valor Líquido Recebido: R$ ${valorLiquido.toFixed(2)}<br>
-      Lucro Real: R$ ${lucroReal.toFixed(2)}<br>
-      Lucro Percentual: ${lucroPercentual.toFixed(2)}%<br>
-      ${observacao ? `<br><strong>Observação:</strong> ${observacao}` : ''}<br>
-      ${alerta}
-    `;
-  }
-</script>
+  </script>
 </body>
 </html>
