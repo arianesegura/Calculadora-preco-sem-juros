@@ -42,20 +42,13 @@
       background-color: #0056b3;
     }
 
-    function imprimirResultado() {
-  const resultado = document.getElementById('resultado').innerHTML;
-  const janela = window.open('', '', 'width=800,height=600');
-  janela.document.write('<html><head><title>Impressão</title></head><body>');
-  janela.document.write('<h2>Resultado da Simulação</h2>');
-  janela.document.write(resultado);
-  janela.document.write('</body></html>');
-  janela.document.close();
-  janela.print();
-}
   </style>
 </head>
 <body>
   <h2>Calculadora de Preço Final</h2>
+
+  <label for="nomePeca">Nome da Peça</label>
+<input type="text" id="nomePeca" placeholder="Ex: Tela Samsung A12">
 
   <label for="nomePeca">Nome da Peça</label>
 <input type="text" id="nomePeca" placeholder="Ex: Tela Samsung A12">
@@ -82,10 +75,19 @@
   <button onclick="calcular()">Calcular Preço Final</button>
   <button onclick="imprimirResultado()">Imprimir Resultado</button>
 
-
   <div class="resultado" id="resultado"></div>
 
   <script>
+    function imprimirResultado() {
+  const resultado = document.getElementById('resultado').innerHTML;
+  const janela = window.open('', '', 'width=800,height=600');
+  janela.document.write('<html><head><title>Impressão</title></head><body>');
+  janela.document.write('<h2>Resultado da Simulação</h2>');
+  janela.document.write(resultado);
+  janela.document.write('</body></html>');
+  janela.document.close();
+  janela.print();
+}
     
     function calcular() {
       const peca = parseFloat(document.getElementById('peca').value);
@@ -119,6 +121,7 @@
       `;
       
     }
+    
   </script>
 </body>
 </html>
