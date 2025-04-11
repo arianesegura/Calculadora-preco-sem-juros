@@ -62,7 +62,7 @@
   <h2>Calculadora de Preço Final com Parcelamento</h2>
 
   <label for="nomePeca">Nome da Peça</label>
-<input type="text" id="nomePeca" placeholder="Ex: Tela Samsung A12">
+<input type="text" id="nomePeca" placeholder="Ex: Tela do Samsung A20">
 
   <label for="peca">Custo da Peça (R$)</label>
   <input type="number" id="peca" value="320.98" step="0.01">
@@ -103,6 +103,8 @@
   <script>
 
     function imprimirResultado() {
+
+  const nomePeca = document.getElementById('nomePeca').value;
   const resultado = document.getElementById('resultado').innerHTML;
   const janela = window.open('', '', 'width=800,height=600');
   janela.document.write('<html><head><title>Impressão</title></head><body>');
@@ -114,6 +116,7 @@
 }
 
     function calcular() {
+      const nomePeca = document.getElementById('nomePeca').value;
       const peca = parseFloat(document.getElementById('peca').value);
       const mao = parseFloat(document.getElementById('mao').value);
       const margem = parseFloat(document.getElementById('margem').value) / 100;
@@ -170,6 +173,7 @@
 
       document.getElementById('resultado').innerHTML = `
         <strong>Resultado:</strong><br>
+        <strong>Peça:</strong> ${nomePeca}<br>
         Preço Final: R$ ${precoFinal.toFixed(2)}<br>
         ${textoParcelamento}
         Valor Líquido Recebido: R$ ${valorLiquido.toFixed(2)}<br>
